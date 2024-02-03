@@ -20,8 +20,7 @@ const customStyles = {
 };
 
 const AddTaskModal = ({ isOpen, onRequestClose, onTaskAdded }: any) => {
-  const userId = localStorage.getItem("_id");
-  const [formData, setFormData] = useState<Task>({
+const userId = typeof window !== "undefined" ? localStorage.getItem("_id") : "";  const [formData, setFormData] = useState<Task>({
     name: "",
     description: "",
     priority: Priority.LOW,

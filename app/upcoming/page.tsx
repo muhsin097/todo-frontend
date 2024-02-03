@@ -12,7 +12,8 @@ import AddTaskModal from "../components/addTaskModal";
 export default function Upcoming() {
   const [tasks, setTasks] = useState<TaskList[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const userId = localStorage.getItem("_id");
+  const userId =
+    typeof window !== "undefined" ? localStorage.getItem("_id") : "";
 
   const fetchTasks = async () => {
     if (userId) {

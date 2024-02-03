@@ -7,7 +7,9 @@ import AddTaskModal from "./components/addTaskModal";
 export default function Home() {
   const [tasks, setTasks] = useState<TaskList[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const userId = localStorage.getItem("_id");
+
+  const userId =
+    typeof window !== "undefined" ? localStorage.getItem("_id") : "";
   const [searchTerm, setSearchTerm] = useState("");
 
   const fetchTasks = async () => {

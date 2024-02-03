@@ -3,7 +3,6 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Link from "next/link";
-import { Providers } from "./components/providers";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
@@ -20,10 +19,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const router = useRouter();
-  const userId = localStorage.getItem("_id");
-  const accessToken = localStorage.getItem("accessToken");
-  const username = localStorage.getItem("username");
-  const isAuthenticated = username && userId && accessToken;
+  let isAuthenticated = false;
+  if (typeof window !== "undefined") {
+    const userId = localStorage.getItem("_id");
+    const accessToken = localStorage.getItem("accessToken");
+    const username = localStorage.getItem("username");
+    isAuthenticated = !!userId && !!accessToken && !!username;
+  }
   useEffect(() => {
     if (!isAuthenticated) {
       router.push("login");
@@ -33,10 +35,12 @@ export default function RootLayout({
   }, []);
 
   const handleLogout = () => {
-    localStorage.setItem("accessToken", "");
-    localStorage.setItem("username", "");
-    localStorage.setItem("_id", "");
-    router.push("/login");
+    if (typeof window !== "undefined") {
+      localStorage.setItem("accessToken", "");
+      localStorage.setItem("username", "");
+      localStorage.setItem("_id", "");
+      router.push("/login");
+    }
   };
 
   return (

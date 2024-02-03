@@ -5,8 +5,8 @@ import { getLabels, deleteLabel, addLabel } from "../services/apiService";
 export default function Filters() {
   const [allLabels, setAllLabels] = useState<string[]>([]);
   const [newLabel, setNewLabel] = useState<string>("");
-  const userId = localStorage.getItem("_id");
-
+  const userId =
+    typeof window !== "undefined" ? localStorage.getItem("_id") : "";
   const fetchLabels = async () => {
     if (userId) {
       try {

@@ -11,7 +11,7 @@ const Login = () => {
   const handleLogin = async () => {
     try {
       const resp = await login({ username, password });
-      if (resp?.user) {
+      if (resp?.user && typeof window !== "undefined") {
         const { access_token, username, _id } = resp?.user;
         localStorage.setItem("accessToken", access_token);
         localStorage.setItem("username", username);
