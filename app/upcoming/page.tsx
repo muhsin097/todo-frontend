@@ -1,19 +1,23 @@
 "use client";
 import { useState, useEffect } from "react";
-import { deleteTask, getTodaysTasks, updateTasks } from "./services/apiService";
-import { Priority, TaskList } from "./models/task";
-import AddTaskModal from "./components/addTaskModal";
+import {
+  deleteTask,
+  getTodaysTasks,
+  getUpcomingTasks,
+  updateTasks,
+} from "../services/apiService";
+import { Priority, TaskList } from "../models/task";
+import AddTaskModal from "../components/addTaskModal";
 
-export default function Home() {
+export default function Upcoming() {
   const [tasks, setTasks] = useState<TaskList[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const userId = localStorage.getItem("_id");
-  const [searchTerm, setSearchTerm] = useState("");
 
   const fetchTasks = async () => {
     if (userId) {
       try {
-        const response = await getTodaysTasks(userId, searchTerm);
+        const response = await getUpcomingTasks(userId);
         setTasks(response);
       } catch (error) {
         console.error("Error fetching tasks:", error);
@@ -42,15 +46,11 @@ export default function Home() {
 
   useEffect(() => {
     fetchTasks();
-  }, [searchTerm]);
+  }, []);
 
   const handleTaskAdded = () => {
     fetchTasks();
   };
-
-  // const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   setSearchTerm(e.target.value);
-  // };
 
   const getPriorityFlag = (priority: string): string => {
     switch (priority) {
@@ -67,31 +67,25 @@ export default function Home() {
 
   return (
     <div className="container mx-auto p-2 " id="root" style={{ width: `50%` }}>
-      <h1 className="text-2xl font-bold mb-4">Today&apos;s Tasks</h1>
-      {/* <div className="mb-4">
-        <label htmlFor="search">Search:</label>
-        <input
-          type="text"
-          id="search"
-          name="search"
-          value={searchTerm}
-          onChange={handleSearchChange}
-          className="form-input"
-        />
-      </div> */}
-      <ul>
+      <h1 className="text-2xl font-bold mb-4">Upcoming Tasks</h1>
+      <ul className="">
         {tasks &&
           tasks.length > 0 &&
           tasks.map((task, index) => (
-            <li key={task?._id} className="mb-4">
+            <li key={task?._id} className="mb-4 mr-4">
+              <input
+                type="checkbox"
+                className="mr-2 cursor-pointer"
+                checked={task?.isDone}
+                onChange={() => handleTaskDone(task)}
+              />
               <div className="flex items-start">
-                <input
-                  type="checkbox"
-                  className="mr-2 cursor-pointer"
-                  checked={task?.isDone}
-                  onChange={() => handleTaskDone(task)}
-                />
                 <div className={`flex-1 text-base`}>
+                  {task?.date && (
+                    <p className="text-gray-600 mb-1">
+                      {new Date(task?.date).toDateString()}
+                    </p>
+                  )}
                   <p
                     className={`mb-1 ${
                       task?.isDone ? "line-through text-gray-500" : ""
