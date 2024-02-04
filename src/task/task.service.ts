@@ -1,16 +1,17 @@
-// task.service.ts
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Model, Mongoose, Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { Task } from './entity/task.entity';
 import { ProjectService } from 'src/project/project.service';
+import { LabelService } from './label/label.service';
 
 @Injectable()
 export class TaskService {
   constructor(
     @InjectModel(Task.name) private readonly taskModel: Model<Task>,
     private readonly projectService: ProjectService,
+    private readonly labelService: LabelService,
   ) {}
 
   async findAll(
@@ -65,7 +66,14 @@ export class TaskService {
     const createTaskDto = {
       ...createTask,
       userId: new Types.ObjectId(createTask?.userId),
+      subTasks: createTask?.subTasks?.map((task) => new Types.ObjectId(task)),
     };
+    const newLabels = createTask?.labels;
+    await this.labelService.createBulkLabel({
+      name: newLabels,
+      userId: createTask?.userId,
+    });
+
     if (createTaskDto.projectId) {
       const createdTask = new this.taskModel(createTaskDto);
       return createdTask.save();
@@ -88,18 +96,52 @@ export class TaskService {
     }
   }
 
-  async update(id: string, updateTaskDto: CreateTaskDto): Promise<Task> {
-    const updatedTask = await this.taskModel
-      .findByIdAndUpdate(
-        id,
-        { ...updateTaskDto, userId: new Types.ObjectId(updateTaskDto?.userId) },
-        { new: true },
-      )
-      .exec();
-    if (!updatedTask) {
+  async update(id: string, updateTask: CreateTaskDto): Promise<Task> {
+    const taskToUpdate = await this.taskModel.findById(id).exec();
+    const updateTaskDto = {
+      ...updateTask,
+      userId: new Types.ObjectId(updateTask?.userId),
+      subTasks: updateTask?.subTasks?.map((task) => new Types.ObjectId(task)),
+    };
+    if (!taskToUpdate) {
       throw new NotFoundException('Task not found');
     }
-    return updatedTask;
+    if (updateTaskDto.isDone) {
+      const updatedTask = await this.taskModel
+        .findByIdAndUpdate(
+          id,
+          {
+            ...updateTaskDto,
+          },
+          { new: true },
+        )
+        .exec();
+      await this.taskModel.updateMany(
+        { _id: { $in: taskToUpdate.subTasks } },
+        { $set: { isDone: true } },
+      );
+
+      if (!updatedTask) {
+        throw new NotFoundException('Task not found');
+      }
+
+      return updatedTask;
+    } else {
+      const updatedTask = await this.taskModel
+        .findByIdAndUpdate(
+          id,
+          {
+            ...updateTaskDto,
+          },
+          { new: true },
+        )
+        .exec();
+
+      if (!updatedTask) {
+        throw new NotFoundException('Task not found');
+      }
+      return updatedTask;
+    }
   }
 
   async delete(id: string): Promise<void> {
@@ -111,25 +153,55 @@ export class TaskService {
 
   async findTodayTasks(userId: string): Promise<Task[]> {
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // Set to the beginning of the day
+    today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1); // Set to the beginning of the next day
-
+    tomorrow.setDate(tomorrow.getDate() + 1);
     return this.taskModel
-      .find({
-        date: { $gte: today, $lt: tomorrow },
-        userId: new Types.ObjectId(userId),
-      })
-      .sort({ date: 1 })
+      .aggregate([
+        {
+          $match: {
+            date: { $gte: today, $lt: tomorrow },
+            userId: new Types.ObjectId(userId),
+          },
+        },
+        {
+          $lookup: {
+            from: 'tasks',
+            localField: 'subTasks',
+            foreignField: '_id',
+            as: 'subTasksDetails',
+          },
+        },
+        {
+          $sort: { date: 1 },
+        },
+      ])
       .exec();
   }
 
   async findUpcomingTasks(userId: string): Promise<Task[]> {
     const today = new Date();
-    today.setHours(0, 0, 0, 0); // Set to the beginning of the day
+    today.setHours(0, 0, 0, 0);
     return this.taskModel
-      .find({ date: { $gt: today }, userId: new Types.ObjectId(userId) })
-      .sort({ date: 1 })
+      .aggregate([
+        {
+          $match: {
+            date: { $gt: today },
+            userId: new Types.ObjectId(userId),
+          },
+        },
+        {
+          $lookup: {
+            from: 'tasks',
+            localField: 'subTasks',
+            foreignField: '_id',
+            as: 'subTasksDetails',
+          },
+        },
+        {
+          $sort: { date: 1 },
+        },
+      ])
       .exec();
   }
 }

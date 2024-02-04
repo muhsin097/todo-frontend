@@ -8,6 +8,7 @@ export class CreateTaskDto {
   projectName?: string;
   projectDescription?: string;
   projectId?: string;
-  status: boolean;
+  isDone: boolean;
   userId: string;
+  subTasks: string[];
 }

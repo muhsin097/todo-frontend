@@ -43,6 +43,34 @@ export class LabelService {
     }
   }
 
+  async createBulkLabel(labelData: {
+    name: string[];
+    userId: string;
+  }): Promise<Label> {
+    const existingLabel = await this.labelModel.findOne({
+      userId: new Types.ObjectId(labelData.userId),
+    });
+    if (existingLabel) {
+      // Check if there are new labels
+      const newLabels = labelData.name.filter(
+        (label) => !existingLabel.labels.includes(label),
+      );
+
+      if (newLabels.length > 0) {
+        existingLabel.labels = [...existingLabel.labels, ...newLabels];
+        return existingLabel.save();
+      } else {
+        return existingLabel;
+      }
+    } else {
+      const createdLabel = new this.labelModel({
+        userId: new Types.ObjectId(labelData.userId),
+        labels: [...labelData.name],
+      });
+      return createdLabel.save();
+    }
+  }
+
   async delete(name: string, userId: string): Promise<void> {
     const result = await this.labelModel
       .findOneAndUpdate(

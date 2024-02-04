@@ -4,9 +4,9 @@ import { Project } from 'src/project/entity/project.entity';
 
 @Schema()
 export class Task extends Document {
-  @Prop({ type: Types.ObjectId })
+  @Prop({ required: true, type: Types.ObjectId })
   userId: Types.ObjectId;
-  
+
   @Prop({ required: true })
   name: string;
 
@@ -30,6 +30,9 @@ export class Task extends Document {
 
   @Prop({ type: Types.ObjectId })
   project: Types.ObjectId;
+
+  @Prop({ type: [{ type: Types.ObjectId, ref: 'Task' }] })
+  subTasks: Types.ObjectId[];
 }
 
 export const TaskSchema = SchemaFactory.createForClass(Task);
