@@ -7,6 +7,7 @@ export interface Task {
   labels?: string[];
   project?: string;
   userId?: string;
+  subTasks?: any[];
 }
 
 export interface Project {
@@ -17,6 +18,7 @@ export interface Project {
 export interface TaskList extends Task {
   _id: string;
   isDone: boolean;
+  subTasksDetails?: TaskList[];
 }
 
 export enum Priority {

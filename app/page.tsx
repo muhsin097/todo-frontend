@@ -3,11 +3,21 @@ import { useState, useEffect } from "react";
 import { deleteTask, getTodaysTasks, updateTasks } from "./services/apiService";
 import { Priority, TaskList } from "./models/task";
 import AddTaskModal from "./components/addTaskModal";
+import TaskDetailViewModal from "./components/taskDetailViewModal";
 
 export default function Home() {
   const [tasks, setTasks] = useState<TaskList[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-
+  const [isDetailViewOpen, setIsDetailViewOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<TaskList | null>(null);
+  const closeDetailView = () => {
+    setSelectedTask(null);
+    setIsDetailViewOpen(false);
+  };
+  const openDetailView = (task: TaskList) => {
+    setSelectedTask(task);
+    setIsDetailViewOpen(true);
+  };
   const userId =
     typeof window !== "undefined" ? localStorage.getItem("_id") : "";
   const [searchTerm, setSearchTerm] = useState("");
@@ -85,7 +95,7 @@ export default function Home() {
         {tasks &&
           tasks.length > 0 &&
           tasks.map((task, index) => (
-            <li key={task?._id} className="mb-4">
+            <li key={task?._id} className="mb-4 border p-3 rounded">
               <div className="flex items-start">
                 <input
                   type="checkbox"
@@ -128,6 +138,36 @@ export default function Home() {
                       {task?.priority}{" "}
                     </p>
                   )}
+                  {task?.subTasksDetails &&
+                    task?.subTasksDetails.length > 0 && (
+                      <div className="flex mb-1">
+                        <div className="flex">
+                          Subtasks
+                          {task?.subTasksDetails.map((sub, index) => (
+                            <span
+                              key={index}
+                              className="bg-blue-200 px-1 py-0.5 rounded ml-2"
+                            >
+                              <p
+                                className={`mb-1 ${
+                                  sub?.isDone
+                                    ? "line-through text-gray-500"
+                                    : ""
+                                }`}
+                              >
+                                {sub?.name}
+                              </p>
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  <button
+                    onClick={() => openDetailView(task)}
+                    className="ml-2 px-2 py-1 bg-blue-500 text-white rounded"
+                  >
+                    View Details
+                  </button>
                 </div>
                 <button
                   onClick={() => handleDeleteTask(task?._id)}
@@ -153,6 +193,9 @@ export default function Home() {
         onRequestClose={() => setIsModalOpen(false)}
         onTaskAdded={handleTaskAdded}
       />
+      {isDetailViewOpen && selectedTask && (
+        <TaskDetailViewModal task={selectedTask} onClose={closeDetailView} />
+      )}
     </div>
   );
 }

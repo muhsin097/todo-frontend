@@ -1,61 +1,37 @@
-@import 'tailwindcss/base';
-@import 'tailwindcss/components';
-@import 'tailwindcss/utilities';
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
 
 body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))) rgb(var(--background-start-rgb));
-}
-
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+  color: text-gray-800;
+  background: bg-gradient-to-b from-transparent to-background-end
+    via-background-start;
 }
 
 .modal-header {
-  width: 100%;
-  justify-content: space-between;
-  align-items: flex-start;
+  @apply w-full justify-between items-start;
 }
 
 .form-group {
-  width: 100%;
-  margin-bottom: 5px;
+  @apply w-full mb-2 flex flex-col;
 }
 
-.form-input,
+.form-input {
+  @apply w-full p-1 mt-1 mb-1 py-2 text-sm rounded border;
+}
+
 .form-select {
-  width: 100%;
-  padding: 6px;
-  margin-top: 3.75px;
-  margin-bottom:3.75px;
-  font-size: 12px;
-  border: 0.75px solid #ccc;
-  border-radius: 3.75px;
+  @apply w-full p-1 mt-1 mb-1 py-2 text-sm rounded;
 }
 
 .form-button {
-  background-color: #3498db;
-  color: #fff;
-  padding: 7.5px 11.25px;
-  /* 10px * 0.75, 15px * 0.75 */
-  border: none;
-  border-radius: 3.75px;
-  /* 5px * 0.75 */
-  cursor: pointer;
-  font-size: 13.5px;
-  /* 18px * 0.75 */
+  @apply bg-blue-500 text-white p-2 rounded cursor-pointer text-sm;
 }
 
 body {
-  margin: 0;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  @apply m-0 font-sans;
 }
 
 a {
-  color: inherit;
-  text-decoration: none;
+  @apply text-blue-500 no-underline;
 }

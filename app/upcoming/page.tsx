@@ -2,19 +2,28 @@
 import { useState, useEffect } from "react";
 import {
   deleteTask,
-  getTodaysTasks,
   getUpcomingTasks,
   updateTasks,
 } from "../services/apiService";
 import { Priority, TaskList } from "../models/task";
 import AddTaskModal from "../components/addTaskModal";
+import TaskDetailViewModal from "../components/taskDetailViewModal";
 
 export default function Upcoming() {
   const [tasks, setTasks] = useState<TaskList[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const userId =
     typeof window !== "undefined" ? localStorage.getItem("_id") : "";
-
+  const [isDetailViewOpen, setIsDetailViewOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<TaskList | null>(null);
+  const closeDetailView = () => {
+    setSelectedTask(null);
+    setIsDetailViewOpen(false);
+  };
+  const openDetailView = (task: TaskList) => {
+    setSelectedTask(task);
+    setIsDetailViewOpen(true);
+  };
   const fetchTasks = async () => {
     if (userId) {
       try {
@@ -67,13 +76,22 @@ export default function Upcoming() {
   };
 
   return (
-    <div className="container mx-auto p-2 " id="root" style={{ width: `50%` }}>
+    <div
+      className="container mx-auto py-6 p-2 h-screen overflow-y-auto"
+      id="root"
+      style={{ width: `75%` }}
+    >
+      <style jsx>{`
+        ::-webkit-scrollbar {
+          width: 0;
+        }
+      `}</style>
       <h1 className="text-2xl font-bold mb-4">Upcoming Tasks</h1>
-      <ul className="">
+      <div className="grid grid-cols-3 gap-4">
         {tasks &&
           tasks.length > 0 &&
           tasks.map((task, index) => (
-            <li key={task?._id} className="mb-4 mr-4">
+            <div key={task?._id} className="mb-4 mr-4 p-3 rounded border">
               <input
                 type="checkbox"
                 className="mr-2 cursor-pointer"
@@ -121,20 +139,50 @@ export default function Upcoming() {
                       {task?.priority}{" "}
                     </p>
                   )}
+                  {task?.subTasksDetails &&
+                    task?.subTasksDetails.length > 0 && (
+                      <div className="flex mb-1">
+                        <div className="flex">
+                          Subtasks
+                          {task?.subTasksDetails.map((sub, index) => (
+                            <span
+                              key={index}
+                              className="bg-blue-200 px-1 py-0.5 rounded ml-2"
+                            >
+                              <p
+                                className={`mb-1 ${
+                                  sub?.isDone
+                                    ? "line-through text-gray-500"
+                                    : ""
+                                }`}
+                              >
+                                {sub?.name}
+                              </p>
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  <button
+                    onClick={() => openDetailView(task)}
+                    className="ml-2 px-2 py-1 bg-blue-500 text-white rounded"
+                  >
+                    View Details
+                  </button>
                 </div>
                 <button
                   onClick={() => handleDeleteTask(task?._id)}
-                  className="ml-2 px-2 py-1 bg-red-500 text-white rounded"
+                  className="ml-2 px-2 py-1 bg-red-800 text-white border-zinc-800"
                 >
-                  Delete
+                  Del
                 </button>
                 {index < tasks.length - 1 && (
                   <hr className="my-4 border-t-2 border-gray-300" />
                 )}{" "}
               </div>
-            </li>
+            </div>
           ))}
-      </ul>
+      </div>
       <button
         onClick={() => setIsModalOpen(true)}
         className="mt-2 px-2 py-1 bg-green-500 text-white rounded"
@@ -146,6 +194,9 @@ export default function Upcoming() {
         onRequestClose={() => setIsModalOpen(false)}
         onTaskAdded={handleTaskAdded}
       />
+      {isDetailViewOpen && selectedTask && (
+        <TaskDetailViewModal task={selectedTask} onClose={closeDetailView} />
+      )}
     </div>
   );
 }
